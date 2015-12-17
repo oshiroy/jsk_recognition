@@ -51,6 +51,7 @@ namespace jsk_pcl_ros
     DiagnosticNodelet::onInit();
     pnh_->param("use_indices", use_indices_, true);
     pnh_->param("use_async", use_async_, false);
+    pnh_->param("keep_organized", keep_organized_, false);
     ////////////////////////////////////////////////////////
     // Publishers
     ////////////////////////////////////////////////////////
@@ -235,6 +236,7 @@ namespace jsk_pcl_ros
       extract_nonplane.setNegative(true);
       extract_nonplane.setInputCloud(input_cloud);
       extract_nonplane.setIndices(all_indices);
+      extract_nonplane.setKeepOrganized(keep_organized_);
       extract_nonplane.filter(*nonplane_cloud);
       nonplane_pub_.publish(nonplane_cloud);
     }
@@ -304,6 +306,7 @@ namespace jsk_pcl_ros
     pcl::ExtractIndices<pcl::PointXYZRGB> extract_all_indices;
     extract_all_indices.setInputCloud(nonplane_cloud);
     extract_all_indices.setIndices(all_result_indices);
+    extract_all_indices.setKeepOrganized(keep_organized_);
     extract_all_indices.filter(result_cloud);
     
     sensor_msgs::PointCloud2 ros_result;

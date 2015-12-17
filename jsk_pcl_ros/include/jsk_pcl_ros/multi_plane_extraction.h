@@ -134,6 +134,7 @@ namespace jsk_pcl_ros
     bool use_indices_;
     double maginify_;
     bool use_sensor_frame_;
+    bool keep_organized_
     std::string sensor_frame_;
   private:
     
