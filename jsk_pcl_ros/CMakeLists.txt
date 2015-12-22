@@ -101,6 +101,7 @@ generate_dynamic_reconfigure_options(
   cfg/BilateralFilter.cfg
   cfg/ICPRegistration.cfg
   cfg/OrganizedPassThrough.cfg
+  cfg/OrganizedEuclideanClustering.cfg
   cfg/EuclideanClustering.cfg
   cfg/HSIColorFilter.cfg
   cfg/RGBColorFilter.cfg
@@ -186,6 +187,8 @@ jsk_pcl_nodelet(src/color_filter_nodelet.cpp
   "jsk_pcl/HSIColorFilter" "hsi_color_filter")
 jsk_pcl_nodelet(src/euclidean_cluster_extraction_nodelet.cpp
   "jsk_pcl/EuclideanClustering" "euclidean_clustering")
+jsk_pcl_nodelet(src/organized_euclidean_clustering_nodelet.cpp
+  "jsk_pcl/OrgnizedEuclideanClustering" "organized_euclidean_clustering")
 jsk_pcl_nodelet(src/cluster_point_indices_decomposer_nodelet.cpp
   "jsk_pcl/ClusterPointIndicesDecomposer" "cluster_point_indices_decomposer")
 jsk_pcl_nodelet(src/cluster_point_indices_decomposer_z_axis_nodelet.cpp
