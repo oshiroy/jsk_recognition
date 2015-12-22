@@ -39,7 +39,6 @@
 #include "jsk_recognition_utils/pcl_conversion_util.h"
 #include "jsk_pcl_ros/pcl_util.h"
 #include <jsk_topic_tools/rosparam_utils.h>
-
 #include <pcl/segmentation/organized_connected_component_segmentation.h>
 #include <pcl/segmentation/euclidean_cluster_comparator.h>
 
@@ -50,7 +49,7 @@ namespace jsk_pcl_ros
     DiagnosticNodelet::onInit();
     pnh_->param("use_exclude_indices", use_exclude_indices_, false);
     pub_cluster_indices_ = advertise<jsk_recognition_msgs::ClusterPointIndices> (*pnh_,"output",1);
-    cluster_num_pub_ = advertise<jsk_recognition_msgs::Int32Stamped> (*pnh_, "output/cluster_num", 1);
+    cluster_num_pub_ = advertise<jsk_recognition_msgs::Int32Stamped> (*pnh_, "cluster_num", 1);
     srv_ = boost::make_shared <dynamic_reconfigure::Server<Config> > (*pnh_);
     dynamic_reconfigure::Server<Config>::CallbackType f =
       boost::bind (&OrganizedEuclideanClustering::configCallback, this, _1, _2);
@@ -94,7 +93,6 @@ namespace jsk_pcl_ros
     const sensor_msgs::PointCloud2ConstPtr& input)
   {
     boost::mutex::scoped_lock lock(mutex_);
-    JSK_ROS_INFO("extract function");
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromROSMsg(*input, *cloud);
     pcl::EuclideanClusterComparator<pcl::PointXYZ, pcl::Normal, pcl::Label>::Ptr comparator
@@ -106,7 +104,7 @@ namespace jsk_pcl_ros
     std::vector<bool> exclude_labels;
     for (size_t i = 0; i < cloud->points.size(); i++){
       pcl::Label t;
-      if (isnan(cloud->points[i].x) || isnan(cloud->points[i].y) || isnan(cloud->points[i].z))
+      if (pcl_isfinite(cloud->points[i].x) && pcl_isfinite(cloud->points[i].y) &&s pcl_isfinite(cloud->points[i].z))
     	t.label = 0;
       else
     	t.label = 1;
@@ -115,12 +113,12 @@ namespace jsk_pcl_ros
     if(use_exclude_indices_){
       exclude_labels.resize(2 + input_cluster_.size());
       for(size_t i = 0 ; i < input_cluster_.size() ; i ++){
-	if(input_cluster_[i]->indices.size() > exclude_minsize_){
-	  for(size_t j = 0; j < input_cluster_[i]->indices.size(); j++){
-	    labels->points[input_cluster_[i]->indices[j]].label = i + 2;
-	  }
-	  exclude_labels[i + 2] = true;
-	}
+    	if(input_cluster_[i]->indices.size() > exclude_minsize_){
+    	  for(size_t j = 0; j < input_cluster_[i]->indices.size(); j++){
+    	    labels->points[input_cluster_[i]->indices[j]].label = i + 2;
+    	  }
+    	  exclude_labels[i + 2] = true;
+    	}
       }
     }
     else{
@@ -135,16 +133,12 @@ namespace jsk_pcl_ros
     pcl::OrganizedConnectedComponentSegmentation<pcl::PointXYZ, pcl::Label> occs(comparator);
     occs.setInputCloud(cloud);
     occs.segment(euc_labels, euc_label_indices);
-
-    JSK_ROS_INFO("euc_label_indices num : %d" , euc_label_indices.size());
-
     std::vector<pcl::PointIndices> cluster_indices;
     for(size_t i = 0; i < euc_label_indices.size(); i++){
       if(euc_label_indices[i].indices.size() > minsize_){
 	cluster_indices.push_back(euc_label_indices[i]);
       }
     }
-    JSK_ROS_INFO("publish result");
     jsk_recognition_msgs::ClusterPointIndices result;
     result.cluster_indices.resize(cluster_indices.size());
     result.header = input->header;
