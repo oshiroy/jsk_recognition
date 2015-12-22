@@ -480,6 +480,13 @@
     </description>
   </class>
 
+  <class name="jsk_pcl/OrganizedEuclideanClustering" type="jsk_pcl_ros::OrganizedEuclideanClustering"
+         base_class_type="nodelet::Nodelet">
+    <description>
+      Clustering based on Euclidean distance using Connected Component Analysis
+    </description>
+  </class>
+
   <class name="jsk_pcl/ClusterPointIndicesDecomposer" type="jsk_pcl_ros::ClusterPointIndicesDecomposer"
          base_class_type="nodelet::Nodelet">
     <description>
