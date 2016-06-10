@@ -1,0 +1,25 @@
+<launch>
+  <arg name="gui" default="true" />
+
+  <node name="nodelet_manager"
+        pkg="nodelet" type="nodelet"
+        args="manager" />
+
+  <node name="gpu_surf"
+        pkg="nodelet" type="nodelet"
+        args="load imagesift/GpuSURF nodelet_manager">
+    <remap from="image" to="/camera/rgb/image_rect_color" />
+
+  </node>
+
+  <group if="$(arg gui)">
+    <node name="image_view"
+          pkg="image_view" type="image_view">
+      <remap from="image" to="/camera/rgb/image_rect_color" />
+    </node>
+    <node name="output_view"
+          pkg="image_view" type="image_view">
+      <remap from="image" to="gpu_surf/image" />
+    </node>
+  </group>
+</launch>
