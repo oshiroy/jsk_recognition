@@ -3,8 +3,4 @@
          type="imagesift::SiftNode"
          base_class_type="nodelet::Nodelet">
   </class>
-  <class name="imagesift/GpuSURF"
-         type="imagesift::GpuSURF"
-         base_class_type="nodelet::Nodelet">
-  </class>
 </library>
