@@ -40,7 +40,6 @@ find_package(OpenCV REQUIRED)
 message("OPENCV ${OpenCV_VERSION} FOUND")
 
 find_package(Eigen REQUIRED)
-include_directories(${Eigen_INCLUDE_DIRS})
 
 pkg_check_modules(yaml_cpp yaml-cpp REQUIRED)
 IF(${yaml_cpp_VERSION} VERSION_LESS "0.5.0")
@@ -91,6 +90,7 @@ generate_dynamic_reconfigure_options(
   cfg/GaussianBlur.cfg
   cfg/KMeans.cfg
   cfg/ImageTimeDiff.cfg
+  cfg/OverlayImageColorOnMono.cfg
   cfg/SelectiveSearch.cfg
 )
 
@@ -114,7 +114,7 @@ execute_process(
   MK_DIR=${mk_PREFIX}/share/mk installed
   RESULT_VARIABLE _make_failed)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/build/patched-SLIC-Superpixels)
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_BINARY_DIR}/build/patched-SLIC-Superpixels)
 
 link_directories(${catkin_LIBRARY_DIRS})
 add_executable(camshiftdemo src/camshiftdemo.cpp)
@@ -130,7 +130,21 @@ add_library(oriented_gradient src/oriented_gradient.cpp)
 add_executable(oriented_gradient_node src/oriented_gradient_node.cpp)
 add_executable(sliding_window_object_detector_trainer_node  src/sliding_window_object_detector_trainer_node.cpp)
 
+set(jsk_perception_nodes_without_test "")
+
+file(GLOB jsk_perception_node_scripts ${PROJECT_SOURCE_DIR}/node_scripts/*)
+foreach(_node_script ${jsk_perception_node_scripts})
+  get_filename_component(_node_name ${_node_script} NAME_WE)
+  get_filename_component(_basename ${_node_script} NAME)
+  if(NOT EXISTS ${PROJECT_SOURCE_DIR}/test/${_node_name}.test)
+    list(APPEND jsk_perception_nodes_without_test node_scripts/${_basename})
+  endif()
+endforeach()
+
 macro(jsk_perception_nodelet _nodelet_cpp _nodelet_class _single_nodelet_exec_name)
+  if(NOT EXISTS ${PROJECT_SOURCE_DIR}/test/${_single_nodelet_exec_name}.test)
+    list(APPEND jsk_perception_nodes_without_test ${_nodelet_cpp})
+  endif()
   jsk_nodelet(${_nodelet_cpp} ${_nodelet_class} ${_single_nodelet_exec_name}
     jsk_perception_nodelet_sources jsk_perception_nodelet_executables)
 endmacro()
@@ -155,6 +169,7 @@ jsk_perception_nodelet(src/contour_finder.cpp "jsk_perception/ContourFinder" "co
 jsk_perception_nodelet(src/snake_segmentation.cpp "jsk_perception/SnakeSegmentation" "snake_segmentation")
 jsk_perception_nodelet(src/colorize_labels.cpp "jsk_perception/ColorizeLabels" "colorize_labels")
 jsk_perception_nodelet(src/colorize_float_image.cpp "jsk_perception/ColorizeFloatImage" "colorize_float_image")
+jsk_perception_nodelet(src/overlay_image_color_on_mono.cpp "jsk_perception/OverlayImageColorOnMono" "overlay_image_color_on_mono")
 jsk_perception_nodelet(src/grid_label.cpp "jsk_perception/GridLabel" "grid_label")
 jsk_perception_nodelet(src/color_histogram_label_match.cpp "jsk_perception/ColorHistogramLabelMatch" "color_histogram_label_match")
 jsk_perception_nodelet(src/apply_mask_image.cpp "jsk_perception/ApplyMaskImage" "apply_mask_image")
@@ -173,11 +188,13 @@ jsk_perception_nodelet(src/morphological_operator.cpp "jsk_perception/BlackHat" 
 jsk_perception_nodelet(src/rect_to_mask_image.cpp "jsk_perception/RectToMaskImage" "rect_to_mask_image")
 jsk_perception_nodelet(src/mask_image_to_roi.cpp "jsk_perception/MaskImageToROI" "mask_image_to_roi")
 jsk_perception_nodelet(src/mask_image_to_rect.cpp "jsk_perception/MaskImageToRect" "mask_image_to_rect")
+jsk_perception_nodelet(src/bounding_rect_mask_image.cpp "jsk_perception/BoundingRectMaskImage" "bounding_rect_mask_image")
 jsk_perception_nodelet(src/roi_to_rect.cpp "jsk_perception/ROIToRect" "roi_to_rect")
 jsk_perception_nodelet(src/roi_to_mask_image.cpp "jsk_perception/ROIToMaskImage" "roi_to_mask_image")
 jsk_perception_nodelet(src/polygon_to_mask_image.cpp "jsk_perception/PolygonToMaskImage" "polygon_to_mask_image")
 jsk_perception_nodelet(src/polygon_array_to_label_image.cpp "jsk_perception/PolygonArrayToLabelImage" "polygon_array_to_label_image")
 jsk_perception_nodelet(src/rect_to_roi.cpp "jsk_perception/RectToROI" "rect_to_roi")
+jsk_perception_nodelet(src/convex_hull_mask_image.cpp "jsk_perception/ConvexHullMaskImage" "convex_hull_mask_image")
 jsk_perception_nodelet(src/mask_image_generator.cpp "jsk_perception/MaskImageGenerator" "mask_image_generator")
 jsk_perception_nodelet(src/project_image_point.cpp "jsk_perception/ProjectImagePoint" "project_image_point")
 jsk_perception_nodelet(src/sliding_window_object_detector.cpp "jsk_perception/SlidingWindowObjectDetector" "sliding_window_object_detector")
@@ -266,6 +283,9 @@ add_custom_target(eusmodel_template ALL DEPENDS
   ${PROJECT_SOURCE_DIR}/launch/eusmodel_detection_elevator-panels-eng8.launch
   ${PROJECT_SOURCE_DIR}/launch/eusmodel_detection_elevator-panels-eng2.launch)
 
+# download and install trained data
+add_custom_target(install_trained_data ALL COMMAND ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
+
 install(TARGETS camshiftdemo virtual_camera_mono point_pose_extractor white_balance_converter hough_lines rectangle_detector calc_flow color_histogram_sliding_matcher oriented_gradient oriented_gradient_node ${PROJECT_NAME}
   ${jsk_perception_nodelet_executables}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
@@ -286,7 +306,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 install(FILES jsk_perception_nodelets.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
-add_custom_target(install_trained_data COMMAND ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
+message(AUTHOR_WARNING "Node/Nodelets without rostest: ${jsk_perception_nodes_without_test}")
 
 if(CATKIN_ENABLE_TESTING)
   find_package(roslaunch REQUIRED)
@@ -308,7 +328,10 @@ if(CATKIN_ENABLE_TESTING)
     endmacro()
     # FIXME: jsk_tools/test_topic_published.py does not work on hydro travis/jenkins
     # https://github.com/jsk-ros-pkg/jsk_common/pull/1293#issuecomment-164158260
+    jsk_perception_add_rostest(test/add_mask_image.test)
     jsk_perception_add_rostest(test/apply_mask_image.test)
+    jsk_perception_add_rostest(test/bof_histogram_extractor.test)
+    jsk_perception_add_rostest(test/bounding_rect_mask_image.test)
     jsk_perception_add_rostest(test/colorize_labels.test)
     jsk_perception_add_rostest(test/colorize_float_image.test)
     jsk_perception_add_rostest(test/draw_rect_array.test)
@@ -318,18 +341,19 @@ if(CATKIN_ENABLE_TESTING)
     jsk_perception_add_rostest(test/mask_image_to_label.test)
     jsk_perception_add_rostest(test/kmeans.test)
     jsk_perception_add_rostest(test/rect_array_to_image_marker.test)
+    jsk_perception_add_rostest(test/convex_hull_mask_image.test)
+    jsk_perception_add_rostest(test/overlay_image_color_on_mono.test)
     jsk_perception_add_rostest(test/selective_search.test)
     jsk_perception_add_rostest(test/slic_super_pixels.test)
+    jsk_perception_add_rostest(test/sklearn_classifier.test)
     jsk_perception_add_rostest(test/split_fore_background.test)
     jsk_perception_add_rostest(test/tile_image.test)
     jsk_perception_add_rostest(test/label_image_decomposer.test)
     # FIXME: Does not work on Travis/Jenkins
     # jsk_perception_add_rostest(test/vgg16_object_recognition.test install_trained_data)
     if(TARGET bing)
-      jsk_perception_add_rostest(test/bing.test DEPENDENCIES install_trained_data)
+      jsk_perception_add_rostest(test/bing.test)
     endif()
-    # TODO(wkentaro): https://github.com/jsk-ros-pkg/jsk_recognition/pull/1673#issuecomment-219963052
-    # add_rostest(test/bof_object_recognition.test DEPENDENCIES install_trained_data)
   endif()
   add_rostest(test/sparse_image.test)
 endif()

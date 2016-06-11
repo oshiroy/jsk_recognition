@@ -31,12 +31,20 @@
          type="jsk_perception::MaskImageToROI"
          base_class_type="nodelet::Nodelet">
   </class>
+  <class name="jsk_perception/BoundingRectMaskImage"
+         type="jsk_perception::BoundingRectMaskImage"
+         base_class_type="nodelet::Nodelet">
+  </class>
   <class name="jsk_perception/RectToMaskImage"
          type="jsk_perception::RectToMaskImage"
          base_class_type="nodelet::Nodelet">
   </class>
   <class name="jsk_perception/RectToROI"
          type="jsk_perception::RectToROI"
+         base_class_type="nodelet::Nodelet">
+  </class>
+  <class name="jsk_perception/ConvexHullMaskImage"
+         type="jsk_perception::ConvexHullMaskImage"
          base_class_type="nodelet::Nodelet">
   </class>
   <class name="jsk_perception/PolygonToMaskImage"
@@ -113,6 +121,11 @@
     </description>
   </class>
   <class name="jsk_perception/ColorizeFloatImage" type="jsk_perception::ColorizeFloatImage"
+         base_class_type="nodelet::Nodelet">
+    <description>
+    </description>
+  </class>
+  <class name="jsk_perception/OverlayImageColorOnMono" type="jsk_perception::OverlayImageColorOnMono"
          base_class_type="nodelet::Nodelet">
     <description>
     </description>
