@@ -21,12 +21,13 @@ namespace jsk_perception
 {
   void GpuSURF::onInit() {
     DiagnosticNodelet::onInit();
+    nh_ = ros::NodeHandle(getNodeHandle(), "image");
     img_pub_  = advertise<sensor_msgs::Image>(*pnh_, "surf_image", 1);
   }
   
   void GpuSURF::subscribe()
   {
-    it_.reset(new image_transport::ImageTransport(*pnh_));
+    it_.reset(new image_transport::ImageTransport(nh_));
     img_sub_ = it_->subscribe("input", 1, &GpuSURF::imageCallback, this);
   }
 
