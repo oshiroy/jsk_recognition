@@ -7,9 +7,9 @@
 
   <node name="gpu_surf"
         pkg="nodelet" type="nodelet"
-        args="load imagesift/GpuSURF nodelet_manager">
-    <remap from="image" to="/camera/rgb/image_rect_color" />
-
+        args="load jsk_perception/GpuSURF nodelet_manager"
+	output="screen">
+    <remap from="~input" to="/camera/rgb/image_rect_color" />
   </node>
 
   <group if="$(arg gui)">
@@ -19,7 +19,7 @@
     </node>
     <node name="output_view"
           pkg="image_view" type="image_view">
-      <remap from="image" to="gpu_surf/image" />
+      <remap from="image" to="gpu_surf/surf_image" />
     </node>
   </group>
 </launch>

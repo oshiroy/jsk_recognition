@@ -191,6 +191,10 @@ if(OPENMP_FOUND)
   jsk_perception_nodelet(src/saliency_map_generator_node.cpp "jsk_perception/SaliencyMapGenerator" "saliency_map_generator")
   jsk_perception_nodelet(src/skeletonization_nodelet.cpp "jsk_perception/Skeletonization" "skeletonization")
 endif()
+jsk_perception_nodelet(src/gpu_surf.cpp "imagesift/GpuSURF" "gpu_surf")
+if($ENV{ROS_DISTRO} STREQUAL "groovy" OR $ENV{ROS_DISTRO} STREQUAL "hydro")
+  set_target_properties("gpu_surf" PROPERTIES COMPILE_FLAGS "-DOPENCV_NON_FREE" )
+endif()
 
 # robot_self_filter is released on version greater than indigo
 find_package(robot_self_filter QUIET)
