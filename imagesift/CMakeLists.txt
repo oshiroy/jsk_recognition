@@ -55,22 +55,13 @@ jsk_feature("ORB" "ORB" "imageorb")
 endif()
 jsk_feature("BRISK" "BRISK" "imagebrisk")
 
+
 jsk_nodelet(src/imagesift.cpp
   "imagesift/ImageSift"
   "imagesift_exec"
   nodelet_sources nodelet_executables)
 set_target_properties("imagesift_exec" PROPERTIES OUTPUT_NAME "imagesift")
 list(APPEND jsk_exec "imagesift_exec")
-
-jsk_nodelet(src/gpu_surf.cpp
-  "imagesift/GpuSURF"
-  "gpusurf_exec"
-  nodelet_sources nodelet_executables)
-set_target_properties("gpusurf_exec" PROPERTIES OUTPUT_NAME "gpu_surf")
-if($ENV{ROS_DISTRO} STREQUAL "groovy" OR $ENV{ROS_DISTRO} STREQUAL "hydro")
-  set_target_properties("gpusurf_exec" PROPERTIES COMPILE_FLAGS "-DOPENCV_NON_FREE" )
-endif()
-list(APPEND jsk_exec "gpusurf_exec")
 
 add_library(${PROJECT_NAME} SHARED ${nodelet_sources})
 
