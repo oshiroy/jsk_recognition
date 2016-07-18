@@ -629,4 +629,9 @@
     <description>
     </description>
   </class>
+  <class name="jsk_pcl/ModelBaseTracker" type="jsk_pcl_ros::ModelBaseTracker"
+         base_class_type="nodelet::Nodelet">
+    <description>
+    </description>
+  </class>
 </library>

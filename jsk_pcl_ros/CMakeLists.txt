@@ -112,6 +112,7 @@ generate_dynamic_reconfigure_options(
   cfg/ExtractTopPolygonLikelihood.cfg
   cfg/Kinfu.cfg
   cfg/PointcloudDatabaseServer.cfg
+  cfg/ModelBaseTracker.cfg
   )
 
 find_package(OpenCV REQUIRED core imgproc)
@@ -359,6 +360,8 @@ if(robot_self_filter_FOUND)
 else(robot_self_filter_FOUND)
   message(AUTHOR_WARNING "robot_self_filter is NOT found. some nodelet depending on robot_self_filter will not be compiled.")
 endif(robot_self_filter_FOUND)
+jsk_pcl_nodelet(src/model_base_tracker.cpp
+    "jsk_pcl/ModelBaseTracker" "model_base_tracker")
 
 add_library(jsk_pcl_ros_base SHARED
   src/region_adjacency_graph.cpp
